@@ -610,7 +610,7 @@ class Dashboard(Model, AuditMixinNullable, ImportMixin):
                     remote_id=slc.id,
                     datasource_name=slc.datasource.name,
                     schema=slc.datasource.name,
-                    database_name=slc.datasource.database.database_name,
+                    database_name=slc.datasource.database.name,
                 )
             copied_dashboard.alter_params(remote_id=dashboard_id)
             copied_dashboards.append(copied_dashboard)
@@ -1532,9 +1532,7 @@ class DruidCluster(Model, AuditMixinNullable):
         return self.cluster_name
 
 
-
 class DruidColumn(Model, AuditMixinNullable, ImportMixin):
-
     """ORM model for storing Druid datasource column metadata"""
 
     __tablename__ = 'columns'
@@ -1683,7 +1681,7 @@ class DruidColumn(Model, AuditMixinNullable, ImportMixin):
         def lookup_obj(lookup_column):
             return db.session.query(DruidColumn).filter(
                 DruidColumn.datasource_name == lookup_column.datasource_name,
-                DruidColumn.metric_name == lookup_column.column_name).first()
+                DruidColumn.column_name == lookup_column.column_name).first()
 
         return import_util.import_simple_obj(db.session, i_column, lookup_obj)
 
@@ -1863,7 +1861,7 @@ class DruidDatasource(Model, AuditMixinNullable, Queryable, ImportMixin):
          superset instances. Audit metadata isn't copies over.
         """
         def lookup_datasource(d):
-            return db.session.query(DruidDatasource).join(Database).filter(
+            return db.session.query(DruidDatasource).join(DruidCluster).filter(
                 DruidDatasource.datasource_name == d.datasource_name,
                 DruidCluster.cluster_name == d.cluster_name,
             ).first()
